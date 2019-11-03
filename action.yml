@@ -1,5 +1,5 @@
 ---
-name: whitespace
+name: whitespace-linter
 author: Nick Osborn
 description: Check for superfluous whitespace
 

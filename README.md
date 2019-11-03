@@ -1,4 +1,4 @@
-# github-action-whitespace
+# github-action-whitespace-linter
 
 A GitHub Action that checks for superfluous whitespace.
 
