@@ -2,26 +2,51 @@
 
 lint() {
   awk '
+    function report_blank(first, last) {
+      if (first == last) {
+        print "  " first ": superfluous blank line"
+      } else {
+        print "  " first "-" last ": superfluous blank lines"
+      }
+    }
+
+    function report_trailing(line) {
+      print "  " line ": trailing whitespace"
+    }
+
     BEGIN {
-      excess_blanks = 0;
+      first_blank = 1
+      last_blank = 0
     }
 
-    NF {
-      excess_blanks = -1;
+    NF == 0 {
+      if (first_blank == 0) {
+        first_blank = NR
+      } else {
+        last_blank = NR
+      }
     }
 
-    {
-      if (++excess_blanks > 0) {
-        printf "  " NR ": superfluous blank line"
+    NF > 0 {
+      if (last_blank > 0) {
+        if (first_blank > 1) {
+          first_blank += 1
+        }
+        report_blank(first_blank, last_blank)
       }
-      else if ($0 ~ /[[:space:]]$/) {
-        print "  " NR ": trailing whitespace"
-      }
+      first_blank = last_blank = 0
+    }
+
+    /[[:space:]]$/ {
+      report_trailing(NR)
     }
 
     END {
-      if (excess_blanks == 0) {
-        print "  " NR ": superfluous blank line"
+      if (first_blank > 0) {
+        if (last_blank == 0) {
+          last_blank = first_blank
+        }
+        report_blank(first_blank, last_blank)
       }
     }
   ' "${1}"
@@ -36,7 +61,8 @@ for file in ${INPUT_FILES}; do
   if [ -z "${OUTPUT}" ]; then
     continue
   fi
-  printf '%s:\n%s\n\n' "${file}" "${OUTPUT}"
+  echo "${file}:"
+  echo "${OUTPUT}"
   status=1
 
   comment="${comment}<details><summary><code>${file}</code></summary>
